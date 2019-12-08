@@ -225,7 +225,7 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.inetdmode = 1;
 					break;
 #endif
-				case: 'U':
+				case 'U':
 					//
 					break;
 				case 'p':
