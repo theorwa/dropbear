@@ -87,7 +87,7 @@ static void printhelp(const char * progname) {
 					"-a		Allow connections to forwarded ports from any host\n"
 					"-c command	Force executed command\n"
 #endif
-					"-U 	add flag -U to wait for UDP packets on port 53"
+					"-U 	Wait for UDP packets on port 53"
 					"-p [address:]port\n"
 					"		Listen on specified tcp port (and optionally address),\n"
 					"		up to %d can be specified\n"
