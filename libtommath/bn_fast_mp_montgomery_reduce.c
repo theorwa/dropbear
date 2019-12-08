@@ -1,4 +1,4 @@
-#include "tommath_private.h"
+#include <tommath_private.h>
 #ifdef BN_FAST_MP_MONTGOMERY_REDUCE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,7 +9,10 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * SPDX-License-Identifier: Unlicense
+ * The library is free for all purposes without any express
+ * guarantee it works.
+ *
+ * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
  */
 
 /* computes xR**-1 == x (mod N) via Montgomery Reduction
@@ -20,154 +23,150 @@
  *
  * Based on Algorithm 14.32 on pp.601 of HAC.
 */
-int fast_mp_montgomery_reduce(mp_int *x, const mp_int *n, mp_digit rho)
+int fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 {
-   int     ix, res, olduse;
-   mp_word W[MP_WARRAY];
+  int     ix, res, olduse;
+  mp_word W[MP_WARRAY];
 
-   if (x->used > (int)MP_WARRAY) {
-      return MP_VAL;
-   }
+  /* get old used count */
+  olduse = x->used;
 
-   /* get old used count */
-   olduse = x->used;
+  /* grow a as required */
+  if (x->alloc < (n->used + 1)) {
+    if ((res = mp_grow (x, n->used + 1)) != MP_OKAY) {
+      return res;
+    }
+  }
 
-   /* grow a as required */
-   if (x->alloc < (n->used + 1)) {
-      if ((res = mp_grow(x, n->used + 1)) != MP_OKAY) {
-         return res;
-      }
-   }
+  /* first we have to get the digits of the input into
+   * an array of double precision words W[...]
+   */
+  {
+    mp_word *_W;
+    mp_digit *tmpx;
 
-   /* first we have to get the digits of the input into
-    * an array of double precision words W[...]
-    */
-   {
+    /* alias for the W[] array */
+    _W   = W;
+
+    /* alias for the digits of  x*/
+    tmpx = x->dp;
+
+    /* copy the digits of a into W[0..a->used-1] */
+    for (ix = 0; ix < x->used; ix++) {
+      *_W++ = *tmpx++;
+    }
+
+    /* zero the high words of W[a->used..m->used*2] */
+    for (; ix < ((n->used * 2) + 1); ix++) {
+      *_W++ = 0;
+    }
+  }
+
+  /* now we proceed to zero successive digits
+   * from the least significant upwards
+   */
+  for (ix = 0; ix < n->used; ix++) {
+    /* mu = ai * m' mod b
+     *
+     * We avoid a double precision multiplication (which isn't required)
+     * by casting the value down to a mp_digit.  Note this requires
+     * that W[ix-1] have  the carry cleared (see after the inner loop)
+     */
+    mp_digit mu;
+    mu = (mp_digit) (((W[ix] & MP_MASK) * rho) & MP_MASK);
+
+    /* a = a + mu * m * b**i
+     *
+     * This is computed in place and on the fly.  The multiplication
+     * by b**i is handled by offseting which columns the results
+     * are added to.
+     *
+     * Note the comba method normally doesn't handle carries in the
+     * inner loop In this case we fix the carry from the previous
+     * column since the Montgomery reduction requires digits of the
+     * result (so far) [see above] to work.  This is
+     * handled by fixing up one carry after the inner loop.  The
+     * carry fixups are done in order so after these loops the
+     * first m->used words of W[] have the carries fixed
+     */
+    {
+      int iy;
+      mp_digit *tmpn;
       mp_word *_W;
-      mp_digit *tmpx;
 
-      /* alias for the W[] array */
-      _W   = W;
+      /* alias for the digits of the modulus */
+      tmpn = n->dp;
 
-      /* alias for the digits of  x*/
-      tmpx = x->dp;
+      /* Alias for the columns set by an offset of ix */
+      _W = W + ix;
 
-      /* copy the digits of a into W[0..a->used-1] */
-      for (ix = 0; ix < x->used; ix++) {
-         *_W++ = *tmpx++;
+      /* inner loop */
+      for (iy = 0; iy < n->used; iy++) {
+          *_W++ += ((mp_word)mu) * ((mp_word)*tmpn++);
       }
+    }
 
-      /* zero the high words of W[a->used..m->used*2] */
-      for (; ix < ((n->used * 2) + 1); ix++) {
-         *_W++ = 0;
-      }
-   }
+    /* now fix carry for next digit, W[ix+1] */
+    W[ix + 1] += W[ix] >> ((mp_word) DIGIT_BIT);
+  }
 
-   /* now we proceed to zero successive digits
-    * from the least significant upwards
-    */
-   for (ix = 0; ix < n->used; ix++) {
-      /* mu = ai * m' mod b
-       *
-       * We avoid a double precision multiplication (which isn't required)
-       * by casting the value down to a mp_digit.  Note this requires
-       * that W[ix-1] have  the carry cleared (see after the inner loop)
-       */
-      mp_digit mu;
-      mu = ((W[ix] & MP_MASK) * rho) & MP_MASK;
+  /* now we have to propagate the carries and
+   * shift the words downward [all those least
+   * significant digits we zeroed].
+   */
+  {
+    mp_digit *tmpx;
+    mp_word *_W, *_W1;
 
-      /* a = a + mu * m * b**i
-       *
-       * This is computed in place and on the fly.  The multiplication
-       * by b**i is handled by offseting which columns the results
-       * are added to.
-       *
-       * Note the comba method normally doesn't handle carries in the
-       * inner loop In this case we fix the carry from the previous
-       * column since the Montgomery reduction requires digits of the
-       * result (so far) [see above] to work.  This is
-       * handled by fixing up one carry after the inner loop.  The
-       * carry fixups are done in order so after these loops the
-       * first m->used words of W[] have the carries fixed
-       */
-      {
-         int iy;
-         mp_digit *tmpn;
-         mp_word *_W;
+    /* nox fix rest of carries */
 
-         /* alias for the digits of the modulus */
-         tmpn = n->dp;
+    /* alias for current word */
+    _W1 = W + ix;
 
-         /* Alias for the columns set by an offset of ix */
-         _W = W + ix;
+    /* alias for next word, where the carry goes */
+    _W = W + ++ix;
 
-         /* inner loop */
-         for (iy = 0; iy < n->used; iy++) {
-            *_W++ += (mp_word)mu * (mp_word)*tmpn++;
-         }
-      }
+    for (; ix <= ((n->used * 2) + 1); ix++) {
+      *_W++ += *_W1++ >> ((mp_word) DIGIT_BIT);
+    }
 
-      /* now fix carry for next digit, W[ix+1] */
-      W[ix + 1] += W[ix] >> (mp_word)DIGIT_BIT;
-   }
+    /* copy out, A = A/b**n
+     *
+     * The result is A/b**n but instead of converting from an
+     * array of mp_word to mp_digit than calling mp_rshd
+     * we just copy them in the right order
+     */
 
-   /* now we have to propagate the carries and
-    * shift the words downward [all those least
-    * significant digits we zeroed].
-    */
-   {
-      mp_digit *tmpx;
-      mp_word *_W, *_W1;
+    /* alias for destination word */
+    tmpx = x->dp;
 
-      /* nox fix rest of carries */
+    /* alias for shifted double precision result */
+    _W = W + n->used;
 
-      /* alias for current word */
-      _W1 = W + ix;
+    for (ix = 0; ix < (n->used + 1); ix++) {
+      *tmpx++ = (mp_digit)(*_W++ & ((mp_word) MP_MASK));
+    }
 
-      /* alias for next word, where the carry goes */
-      _W = W + ++ix;
+    /* zero oldused digits, if the input a was larger than
+     * m->used+1 we'll have to clear the digits
+     */
+    for (; ix < olduse; ix++) {
+      *tmpx++ = 0;
+    }
+  }
 
-      for (; ix <= ((n->used * 2) + 1); ix++) {
-         *_W++ += *_W1++ >> (mp_word)DIGIT_BIT;
-      }
+  /* set the max used and clamp */
+  x->used = n->used + 1;
+  mp_clamp (x);
 
-      /* copy out, A = A/b**n
-       *
-       * The result is A/b**n but instead of converting from an
-       * array of mp_word to mp_digit than calling mp_rshd
-       * we just copy them in the right order
-       */
-
-      /* alias for destination word */
-      tmpx = x->dp;
-
-      /* alias for shifted double precision result */
-      _W = W + n->used;
-
-      for (ix = 0; ix < (n->used + 1); ix++) {
-         *tmpx++ = *_W++ & (mp_word)MP_MASK;
-      }
-
-      /* zero oldused digits, if the input a was larger than
-       * m->used+1 we'll have to clear the digits
-       */
-      for (; ix < olduse; ix++) {
-         *tmpx++ = 0;
-      }
-   }
-
-   /* set the max used and clamp */
-   x->used = n->used + 1;
-   mp_clamp(x);
-
-   /* if A >= m then A = A - m */
-   if (mp_cmp_mag(x, n) != MP_LT) {
-      return s_mp_sub(x, n, x);
-   }
-   return MP_OKAY;
+  /* if A >= m then A = A - m */
+  if (mp_cmp_mag (x, n) != MP_LT) {
+    return s_mp_sub (x, n, x);
+  }
+  return MP_OKAY;
 }
 #endif
 
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

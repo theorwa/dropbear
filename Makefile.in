@@ -80,15 +80,6 @@ else
 	scpobjs=$(SCPOBJS)
 endif
 
-ifeq (@DROPBEAR_PLUGIN@, 1)
-    # rdynamic makes all the global symbols of dropbear available to all the loaded shared libraries
-    # this allow a plugin to reuse existing crypto/utilities like base64_decode/base64_encode without
-    # the need to rewrite them.
-    PLUGIN_LIBS=-ldl -rdynamic
-else
-    PLUGIN_LIBS=
-endif
-
 VPATH=@srcdir@
 srcdir=@srcdir@
 
@@ -198,7 +189,7 @@ dropbearkey: $(dropbearkeyobjs)
 dropbearconvert: $(dropbearconvertobjs)
 
 dropbear: $(HEADERS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@ $(PLUGIN_LIBS)
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
 
 dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS)
@@ -278,29 +269,27 @@ fuzzstandalone: fuzz-harness.o fuzz-targets
 # exclude svr-main.o to avoid duplicate main
 svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
 
-fuzz-harness.o: $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs) fuzz-common.o
-
 # build all the fuzzers. This will require fail to link unless built with
 # make fuzz-targets FUZZLIB=-lFuzzer.a 
 # or similar - the library provides main().
 fuzz-targets: $(FUZZ_TARGETS) $(FUZZER_OPTIONS)
 
-fuzzer-preauth: fuzzer-preauth.o fuzz-harness.o
+fuzzer-preauth: fuzzer-preauth.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-preauth_nomaths: fuzzer-preauth_nomaths.o fuzz-harness.o
+fuzzer-preauth_nomaths: fuzzer-preauth_nomaths.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-pubkey: fuzzer-pubkey.o fuzz-harness.o
+fuzzer-pubkey: fuzzer-pubkey.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-verify: fuzzer-verify.o fuzz-harness.o
+fuzzer-verify: fuzzer-verify.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-kexdh: fuzzer-kexdh.o fuzz-harness.o
+fuzzer-kexdh: fuzzer-kexdh.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-kexecdh: fuzzer-kexecdh.o fuzz-harness.o
+fuzzer-kexecdh: fuzzer-kexecdh.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
 fuzzer-%.options: Makefile

@@ -1,4 +1,4 @@
-#include "tommath_private.h"
+#include <tommath_private.h>
 #ifdef BN_MP_TO_SIGNED_BIN_N_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,20 +9,23 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * SPDX-License-Identifier: Unlicense
+ * The library is free for all purposes without any express
+ * guarantee it works.
+ *
+ * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
  */
 
 /* store in signed [big endian] format */
-int mp_to_signed_bin_n(const mp_int *a, unsigned char *b, unsigned long *outlen)
+int mp_to_signed_bin_n (mp_int * a, unsigned char *b, unsigned long *outlen)
 {
    if (*outlen < (unsigned long)mp_signed_bin_size(a)) {
       return MP_VAL;
    }
-   *outlen = (unsigned long)mp_signed_bin_size(a);
+   *outlen = mp_signed_bin_size(a);
    return mp_to_signed_bin(a, b);
 }
 #endif
 
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

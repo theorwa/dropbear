@@ -1,4 +1,4 @@
-#include "tommath_private.h"
+#include <tommath_private.h>
 #ifdef BN_MP_DR_IS_MODULUS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,11 +9,14 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * SPDX-License-Identifier: Unlicense
+ * The library is free for all purposes without any express
+ * guarantee it works.
+ *
+ * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
  */
 
 /* determines if a number is a valid DR modulus */
-int mp_dr_is_modulus(const mp_int *a)
+int mp_dr_is_modulus(mp_int *a)
 {
    int ix;
 
@@ -26,15 +29,15 @@ int mp_dr_is_modulus(const mp_int *a)
     * but the first digit must be equal to -1 (mod b).
     */
    for (ix = 1; ix < a->used; ix++) {
-      if (a->dp[ix] != MP_MASK) {
-         return 0;
-      }
+       if (a->dp[ix] != MP_MASK) {
+          return 0;
+       }
    }
    return 1;
 }
 
 #endif
 
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

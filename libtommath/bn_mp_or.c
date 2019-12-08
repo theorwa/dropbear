@@ -1,4 +1,4 @@
-#include "tommath_private.h"
+#include <tommath_private.h>
 #ifdef BN_MP_OR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,40 +9,42 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * SPDX-License-Identifier: Unlicense
+ * The library is free for all purposes without any express
+ * guarantee it works.
+ *
+ * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
  */
 
 /* OR two ints together */
-int mp_or(const mp_int *a, const mp_int *b, mp_int *c)
+int mp_or (mp_int * a, mp_int * b, mp_int * c)
 {
-   int     res, ix, px;
-   mp_int  t;
-   const mp_int *x;
+  int     res, ix, px;
+  mp_int  t, *x;
 
-   if (a->used > b->used) {
-      if ((res = mp_init_copy(&t, a)) != MP_OKAY) {
-         return res;
-      }
-      px = b->used;
-      x = b;
-   } else {
-      if ((res = mp_init_copy(&t, b)) != MP_OKAY) {
-         return res;
-      }
-      px = a->used;
-      x = a;
-   }
+  if (a->used > b->used) {
+    if ((res = mp_init_copy (&t, a)) != MP_OKAY) {
+      return res;
+    }
+    px = b->used;
+    x = b;
+  } else {
+    if ((res = mp_init_copy (&t, b)) != MP_OKAY) {
+      return res;
+    }
+    px = a->used;
+    x = a;
+  }
 
-   for (ix = 0; ix < px; ix++) {
-      t.dp[ix] |= x->dp[ix];
-   }
-   mp_clamp(&t);
-   mp_exch(c, &t);
-   mp_clear(&t);
-   return MP_OKAY;
+  for (ix = 0; ix < px; ix++) {
+    t.dp[ix] |= x->dp[ix];
+  }
+  mp_clamp (&t);
+  mp_exch (c, &t);
+  mp_clear (&t);
+  return MP_OKAY;
 }
 #endif
 
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
