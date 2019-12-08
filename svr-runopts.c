@@ -87,7 +87,7 @@ static void printhelp(const char * progname) {
 					"-a		Allow connections to forwarded ports from any host\n"
 					"-c command	Force executed command\n"
 #endif
-					"-U 	Wait for UDP packets on port 53"
+					"-U [new flag]	Wait for UDP packets on port 53"
 					"-p [address:]port\n"
 					"		Listen on specified tcp port (and optionally address),\n"
 					"		up to %d can be specified\n"
@@ -225,9 +225,9 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.inetdmode = 1;
 					break;
 #endif
-				case 'U':
-					//
-					break;
+				// case 'U':
+				// 	//
+				// 	break;
 				case 'p':
 				  nextisport = 1;
 				  break;
