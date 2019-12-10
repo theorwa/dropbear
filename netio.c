@@ -557,6 +557,12 @@ int dropbear_listen(const char* address, const char* port,
 			continue;
 		}
 
+	char buffer[32];
+    char *b = buffer;
+    size_t bufsize = 32;
+    printf("after listen ..... ");
+    getline(&b,&bufsize,stdin);
+
 		if (0 == allocated_lport) {
 			allocated_lport = get_sock_port(sock);
 		}
@@ -565,6 +571,12 @@ int dropbear_listen(const char* address, const char* port,
 
 		nsock++;
 	}
+
+	char buffer[32];
+    char *b = buffer;
+    size_t bufsize = 32;
+    printf("after listen all ..... ");
+    getline(&b,&bufsize,stdin);
 
 	if (res0) {
 		freeaddrinfo(res0);
@@ -674,4 +686,3 @@ void getaddrstring(struct sockaddr_storage* addr,
 		*ret_port = m_strdup(serv);
 	}
 }
-

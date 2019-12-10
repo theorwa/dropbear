@@ -14,6 +14,7 @@ Options can also be defined with -DDROPBEAR_XXX=[0,1] in Makefile CFLAGS
 IMPORTANT: Some options will require "make clean" after changes */
 
 #define DROPBEAR_DEFPORT "22"
+#define DROPBEAR_UDPPORT "8888"
 
 /* Listen on all interfaces */
 #define DROPBEAR_DEFADDRESS ""

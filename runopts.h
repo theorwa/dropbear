@@ -30,6 +30,7 @@
 #include "buffer.h"
 #include "auth.h"
 #include "tcpfwd.h"
+#include <stdbool.h>
 
 typedef struct runopts {
 
@@ -124,6 +125,8 @@ typedef struct svr_runopts {
 	char * pidfile;
 
 	char * forced_command;
+
+	bool is_udp;
 
 } svr_runopts;
 

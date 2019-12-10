@@ -30,6 +30,7 @@
 #include "algo.h"
 #include "ecdsa.h"
 
+
 #include <grp.h>
 
 svr_runopts svr_opts; /* GLOBAL */
@@ -120,6 +121,7 @@ static void printhelp(const char * progname) {
 }
 
 void svr_getopts(int argc, char ** argv) {
+	printf("%s\n", "orwa");
 
 	unsigned int i, j;
 	char ** next = NULL;
@@ -151,6 +153,8 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.hostkey = NULL;
 	svr_opts.delay_hostkey = 0;
 	svr_opts.pidfile = DROPBEAR_PIDFILE;
+	svr_opts.is_udp = false;
+
 #if DROPBEAR_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
 #endif
@@ -180,11 +184,16 @@ void svr_getopts(int argc, char ** argv) {
 	opts.listen_fwd_all = 0;
 #endif
 
+	printf("%d : %s\n", 0, argv[0]);
 	for (i = 1; i < (unsigned int)argc; i++) {
+		printf("%d : %s\n", i, argv[i]);
+
 		if (argv[i][0] != '-' || argv[i][1] == '\0')
 			dropbear_exit("Invalid argument: %s", argv[i]);
 
+		// dropbear_log(LOG_INFO, argv[0]);
 		for (j = 1; (c = argv[i][j]) != '\0' && !next && !nextisport; j++) {
+			printf(">>> %c\n", argv[i][j]);
 			switch (c) {
 				case 'b':
 					next = &svr_opts.bannerfile;
@@ -225,11 +234,11 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.inetdmode = 1;
 					break;
 #endif
-				// case 'U':
-				// 	//
-				// 	break;
+				case 'U':
+					svr_opts.is_udp = true;
+					break;
 				case 'p':
-				  nextisport = 1;
+				  	nextisport = 1;
 				  break;
 				case 'P':
 					next = &svr_opts.pidfile;
@@ -306,6 +315,7 @@ void svr_getopts(int argc, char ** argv) {
 			}
 		}
 
+
 		if (nextisport) {
 			addportandaddress(&argv[i][j]);
 			nextisport = 0;
@@ -323,9 +333,18 @@ void svr_getopts(int argc, char ** argv) {
 		}
 	}
 
+
 	/* Set up listening ports */
 	if (svr_opts.portcount == 0) {
-		svr_opts.ports[0] = m_strdup(DROPBEAR_DEFPORT);
+		if (svr_opts.is_udp)
+		{
+
+			svr_opts.ports[0] = m_strdup(DROPBEAR_UDPPORT);
+		}
+		else 
+		{
+			svr_opts.ports[0] = m_strdup(DROPBEAR_DEFPORT);
+		}
 		svr_opts.addresses[0] = m_strdup(DROPBEAR_DEFADDRESS);
 		svr_opts.portcount = 1;
 	}

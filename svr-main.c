@@ -422,9 +422,16 @@ static size_t listensockets(int *socks, size_t sockcount, int *maxfd) {
 
 		TRACE(("listening on '%s:%s'", svr_opts.addresses[i], svr_opts.ports[i]))
 
-		nsock = dropbear_listen(svr_opts.addresses[i], svr_opts.ports[i], &socks[sockpos], 
-				sockcount - sockpos,
-				&errstring, maxfd);
+		if (svr_opts.is_udp)
+		{
+
+		}
+		else
+		{
+			nsock = dropbear_listen(svr_opts.addresses[i], svr_opts.ports[i], &socks[sockpos], 
+					sockcount - sockpos,
+					&errstring, maxfd);
+		}
 
 		if (nsock < 0) {
 			dropbear_log(LOG_WARNING, "Failed listening on '%s': %s", 
